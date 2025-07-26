@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhloChart - Interactive Flowchart Creator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <h1 class="app-title">PhloChart</h1>
+                <span class="app-subtitle">Interactive Flowchart Creator</span>
+            </div>
+            <div class="header-right">
+                <button id="export-markdown" class="btn btn-secondary" title="Export flowchart as Markdown documentation">Export Markdown</button>
+                <button id="export-image" class="btn btn-secondary" title="Export flowchart as PNG image">Export Image</button>
+                <button id="save-project" class="btn btn-primary" title="Save current project as JSON file">Save Project</button>
+                <input type="file" id="load-project" accept=".json" style="display: none;">
+                <button id="load-project-btn" class="btn btn-secondary" title="Load a previously saved project">Load Project</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <div class="tool-group">
+                    <button id="select-tool" class="tool-btn active" title="Select Tool - Click to select and move elements (V)">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M7 11l5-5 5 5"/>
+                            <path d="M7 13l5 5 5-5"/>
+                        </svg>
+                    </button>
+                    <button id="state-tool" class="tool-btn" title="Add State - Click on canvas to create new states (S)">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="9" y1="9" x2="15" y2="9"/>
+                            <line x1="9" y1="12" x2="15" y2="12"/>
+                            <line x1="9" y1="15" x2="13" y2="15"/>
+                        </svg>
+                    </button>
+                    <button id="connection-tool" class="tool-btn" title="Add Connection - Drag from one state to another (C)">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14"/>
+                            <path d="m12 5 7 7-7 7"/>
+                        </svg>
+                    </button>
+                    <button id="delete-tool" class="tool-btn" title="Delete Tool - Click on elements to delete them (Delete)">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3,6 5,6 21,6"/>
+                            <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"/>
+                            <line x1="10" y1="11" x2="10" y2="17"/>
+                            <line x1="14" y1="11" x2="14" y2="17"/>
+                        </svg>
+                    </button>
+                    <button id="grab-tool" class="tool-btn" title="Grab Tool - Drag to pan around the canvas (G)">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 12l2 2 4-4"/>
+                            <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z"/>
+                            <path d="M8 8h8"/>
+                            <path d="M8 12h8"/>
+                            <path d="M8 16h8"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="tool-group">
+                    <button id="zoom-in" class="tool-btn" title="Zoom In - Increase zoom level (+)">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="m21 21-4.35-4.35"/>
+                            <path d="M11 8v6"/>
+                            <path d="M8 11h6"/>
+                        </svg>
+                    </button>
+                    <button id="zoom-out" class="tool-btn" title="Zoom Out - Decrease zoom level (-)">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="m21 21-4.35-4.35"/>
+                            <path d="M8 11h6"/>
+                        </svg>
+                    </button>
+                    <button id="fit-screen" class="tool-btn" title="Fit to Screen - Adjust view to show all elements">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M8 3H5a2 2 0 0 0-2 2v3"/>
+                            <path d="M21 8V5a2 2 0 0 0-2-2h-3"/>
+                            <path d="M3 16v3a2 2 0 0 0 2 2h3"/>
+                            <path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="canvas-container">
+                <canvas id="flowchart-canvas"></canvas>
+                <div class="canvas-overlay" id="canvas-overlay"></div>
+            </div>
+
+            <!-- Property Panel -->
+            <div class="property-panel" id="property-panel">
+                <div class="panel-header">
+                    <h3>Properties</h3>
+                    <button id="close-panel" class="close-btn">×</button>
+                </div>
+                <div class="panel-content">
+                    <div id="no-selection" class="no-selection">
+                        <p>Select an element to edit its properties</p>
+                    </div>
+                    <div id="state-properties" class="element-properties" style="display: none;">
+                        <h4>State Properties</h4>
+                        <div class="form-group">
+                            <label for="state-title">Title:</label>
+                            <input type="text" id="state-title" class="form-input" title="Enter the title for this state">
+                        </div>
+                        <div class="form-group">
+                            <label for="state-description">Description:</label>
+                            <textarea id="state-description" class="form-textarea" rows="4" title="Enter a description for this state"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="state-color">Color:</label>
+                            <input type="color" id="state-color" class="form-color" title="Choose the background color for this state">
+                        </div>
+                    </div>
+                    <div id="connection-properties" class="element-properties" style="display: none;">
+                        <h4>Connection Properties</h4>
+                        <div class="form-group">
+                            <label for="connection-label">Label:</label>
+                            <input type="text" id="connection-label" class="form-input" title="Enter the label for this connection (e.g., 'click button', 'user action')">
+                        </div>
+                        <div class="form-group">
+                            <label for="connection-style">Style:</label>
+                            <select id="connection-style" class="form-select" title="Choose the line style for this connection">
+                                <option value="straight">Straight</option>
+                                <option value="curved">Curved</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="connection-color">Color:</label>
+                            <input type="color" id="connection-color" class="form-color" title="Choose the color for this connection line">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Context Menu -->
+        <div id="context-menu" class="context-menu" style="display: none;">
+            <div class="context-menu-item" data-action="edit">Edit</div>
+            <div class="context-menu-item" data-action="delete">Delete</div>
+            <div class="context-menu-item" data-action="duplicate">Duplicate</div>
+        </div>
+
+        <!-- Modal for State Creation -->
+        <div id="state-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Create New State</h3>
+                    <button class="close-btn" id="close-state-modal">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="new-state-title">Title:</label>
+                        <input type="text" id="new-state-title" class="form-input" placeholder="Enter state title">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-state-description">Description:</label>
+                        <textarea id="new-state-description" class="form-textarea" rows="3" placeholder="Enter state description"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancel-state" class="btn btn-secondary">Cancel</button>
+                    <button id="create-state" class="btn btn-primary">Create State</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for Connection Label -->
+        <div id="connection-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Add Connection Label</h3>
+                    <button class="close-btn" id="close-connection-modal">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="new-connection-label">Label:</label>
+                        <input type="text" id="new-connection-label" class="form-input" placeholder="Enter connection label (e.g., 'click button', 'user action')">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-connection-style">Style:</label>
+                        <select id="new-connection-style" class="form-select">
+                            <option value="straight">Straight</option>
+                            <option value="curved">Curved</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-connection-color">Color:</label>
+                        <input type="color" id="new-connection-color" class="form-color" value="#6c757d">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancel-connection" class="btn btn-secondary">Cancel</button>
+                    <button id="create-connection" class="btn btn-primary">Create Connection</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
